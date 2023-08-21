@@ -14,6 +14,6 @@ anyhow = "1.0.75"
 clap = { version = "4.3.23", features = ["derive"] }
 env_logger = "0.10.0"
 #llm = "0.1.1"
-llm = { git = "https://github.com/rustformers/llm", default-features = false, features = ["models"] }
+llm = { git = "https://github.com/rustformers/llm", default-features = false, features = ["models", "clblast"] }
 log = "0.4.20"
 rand = "0.8.5"

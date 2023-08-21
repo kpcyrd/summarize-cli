@@ -89,6 +89,7 @@ fn main() -> anyhow::Result<()> {
         llm::ModelParameters {
             // default: 2048 (https://docs.rs/llm/latest/llm/struct.ModelParameters.html#impl-Default-for-ModelParameters)
             context_size: 2_usize.pow(args.context_size),
+            use_gpu: true,
             ..Default::default()
         },
         |progress| {
