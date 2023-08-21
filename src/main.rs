@@ -73,26 +73,14 @@ fn main() -> anyhow::Result<()> {
     };
     info!("Using llama model: {model_path:?}");
 
-    let text = if args.path == Path::new("-") {
-        let mut text = String::new();
-        io::stdin()
-            .read_to_string(&mut text)
-            .context("Failed to read utf-8 text from stdin")?;
-        text
+    // ensure we can open the text
+    let mut text_reader: Box<dyn Read> = if args.path == Path::new("-") {
+        Box::new(io::stdin())
     } else {
-        fs::read_to_string(&args.path)
-            .with_context(|| anyhow!("Failed to read utf-8 text from file: {:?}", args.path))?
+        let file = fs::File::open(&args.path)
+            .with_context(|| anyhow!("Failed to open file: {:?}", args.path))?;
+        Box::new(file)
     };
-
-    let prompt = format!(
-        "[INST] <<SYS>>
-Summarize this
-<</SYS>>
-
-{text}
-[/INST]
-"
-    );
 
     // load a GGML model from disk
     let llama = llm::load::<llm::models::Llama>(
@@ -108,6 +96,22 @@ Summarize this
         },
     )
     .with_context(|| anyhow!("Failed to load model: {model_path:?}"))?;
+
+    // build prompt
+    let mut text = String::new();
+    text_reader
+        .read_to_string(&mut text)
+        .context("Failed to read utf-8 text")?;
+
+    let prompt = format!(
+        "[INST] <<SYS>>
+Summarize this
+<</SYS>>
+
+{text}
+[/INST]
+"
+    );
 
     // use the model to generate text from a prompt
     let mut session = llama.start_session(Default::default());
